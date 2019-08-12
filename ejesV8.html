@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta country="viewport" content="width=device-width, user-scalable=no,
+			initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+		<!--tether.min.css-->
+		<link rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/css/tether.min.css"
+			/>
+
+		<!--jquery.min.js-->
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<!--d3.min.js 4.13.0-->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+		<!--bootstrap.min.css-->
+		<link rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css"
+			/>
+
+		<!--jquery.min.js again-->
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<!--mobile-detect.js-->
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/mobile-detect/1.4.3/mobile-detect.min.js"></script>
+		<title>Reusable D3js Horizontal Barchart</title>
+
+		<style>
+        html {
+            height: 98%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            min-height: 98%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        svg {
+            text-rendering: geometricPrecision;
+            shape-rendering: geometricPrecision;
+        }
+        /*The below rules are in case I want to draw the graphs into several divs*/
+        
+        .chCols {
+            border: 1px groove #333333;
+        }
+        
+        .halfVh {
+            height: 50vh;
+        }
+        
+        .flex-container {
+            display: flex;
+            -ms-align-items: ;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .paddingGB {
+            padding: 100px;
+        }
+        /*-----------End------------*/
+        
+        .tick {}
+    </style>
+	</head>
+
+	<body>
+
+		<script>
+        $(document).ready(function() {
+
+            //Mobile or not?
+            function isMobileDevice() {
+                return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+            };
+
+
+            //print me in console if I'm on mobile or desktop
+            (function() {
+                if (isMobileDevice()) {
+                    console.log("This device is a mobile");
+                } else {
+                    console.log("This device is a PC or laptop");
+                }
+            })();
+
+
+            //Check wether we are in a mobile(Portrait or Landscape) or in a desktop (Full screen or not)
+            function textSetter() {
+                //I pass isMobileDevice() as parameter to return true if I'm on a mobile or false if I'm on desktop	
+                if (isMobileDevice()) {
+                    //if I'm on mobile, it enters on the if else, in which I check if it is in portrait or landscape mode
+                    if (window.innerHeight > window.innerWidth) {
+                        return 40
+                    } else {
+                        return 20
+                    }
+                }
+                //But if not, then it check if browser is full expanded or not and set styles accordingly.		
+                else {
+                    return () => window.innerWidth < 785 ? "11px" : "20px"
+                }
+            }
+
+            //This will set the height depending on landscape or portrait//
+            function heightSetter() {
+
+                if (isMobileDevice()) {
+                    //landscape or not//
+                    if (window.innerHeight > window.innerWidth) {
+                        return 40
+                    } else {
+                        return 20
+                    }
+                }
+                //But if not, then it check if browser is full expanded or not and set styles accordingly.		
+                else {
+                    return () => window.innerWidth < 785 ? "11px" : "20px"
+                }
+            }
+
+            /* create my DATA set .. 
+            	¿Why an object of object? Because if I can add other object and depending on "this or that" I can swap between them playing with the index, or if I need to draw several chart in divs divs I can call the function as many times as needed and change de index in each of the function calls.*/
+
+            var ticksDataArray = [
+                [{
+                        country: "India",
+                        growth: 35
+                    }, {
+                        country: "Chile",
+                        growth: 30
+                    }, {
+                        country: "Spain",
+                        growth: 25
+                    }, {
+                        country: "US",
+                        growth: 20
+                    }, {
+                        country: "France",
+                        growth: 15
+                    },
+
+                ]
+            ];
+
+            // declare my main function
+            function draw(chartDiv, ticksArray) {
+
+                //set margins
+                var margin = {
+                    top: 15,
+                    right: 30,
+                    bottom: 30,
+                    left: 40
+                };
+
+                //set width and height in function of the div where my chart will be rendered
+                var width = $(chartDiv).width() - margin.left / 2 - margin.right * 10;
+
+                var height = $(chartDiv).height() - margin.top - (margin.bottom * 3.5);
+
+
+                var data = ticksArray;
+
+                //set scales & ranges
+
+                function heightSetter() {
+
+                    if (isMobileDevice()) {
+                        if (window.innerHeight > window.innerWidth) {
+                            return [30, (height)]
+                        } else {
+                            return [30, (height * 1.2)]
+                        }
+                    } else {
+                        return [30, (height)]
+                    }
+                }
+
+                var xScale = d3.scaleLinear()
+                    .range([0, width - 5])
+
+                var yScale = d3.scaleBand()
+                    .range(heightSetter()).padding(.38)
+
+
+
+                //=============create the SVG canvas==============
+
+                function svgGtranslater() {
+
+                    if (window.innerHeight > window.innerWidth) {
+                        return heightJC = (margin.top) + (margin.bottom * 2)
+                        console.log("estoy en portrait")
+                    } else {
+                        return heightJC = margin.top + margin.bottom * .5
+                        console.log("iestoy en landscape mode o soy una PC")
+                    }
+                }
+
+                svgGtranslater();
+
+
+                var svg = d3.select(chartDiv)
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right * 10)
+                    .attr("height", () => isMobileDevice ? height + margin.top + (margin.bottom * 5) : height + margin.top + (margin.bottom * 3.5))
+                    .append("g")
+                    .attr("transform", "translate(" + (margin.left * 4) + "," + heightJC + ")")
+
+                //force data
+
+                data.forEach(function(d) {
+                    return d.growth = +d.growth;
+                });
+
+                //set domains
+
+                yScale.domain(data.map(d => d.country))
+
+                xScale.domain([0, d3.max(data, d => d.growth)])
+
+                /*============ Add X & Y axes and append the bars to Y axis =============*/
+
+                function yAxistranslater() {
+
+                    if (isMobileDevice()) {
+                        if (window.innerHeight > window.innerWidth) {
+                            return heightTwo = height;
+                        } else {
+                            return heightTwo = height * 1.2;
+                        }
+                    } else {
+                        return heightTwo = height;
+                    }
+                }
+                //GO translater :D!
+                yAxistranslater()
+
+                //Create and append to DOM the X axis
+                var xAxis = svg.append("g")
+                    .style("font-size", textSetter())
+                    /*.style("font-size", orientationCheck())*/
+                    .attr("class", "xAxis", "axis")
+                    .attr("transform", "translate(" + 0 + "," + heightTwo + ")")
+                    .call(d3.axisBottom(xScale).ticks(5)
+                        .tickPadding(5).tickFormat(d => d + "%"))
+
+                //Create and append to DOM the Y axis, then create the rects and append them to it
+                var yAxis = svg.append("g")
+                    /*.style("font-size", ()=> window.innerWidth  < 785 ? "11px" : "20px")	*/
+                    .style("font-size", textSetter())
+                    .attr("class", "yAxis", "axis")
+                    .call(d3.axisLeft(yScale))
+                    .selectAll("rect")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("stroke", "transparent")
+                    .attr("stroke-width", 4)
+                    .attr("class", "bar")
+                    .attr("height", yScale.bandwidth())
+                    .attr("x", 0.5)
+                    .attr("y", function(d) {
+                        return yScale(d.country)
+                    })
+                    .attr("width", 0)
+                    .transition()
+                    .duration(3800)
+                    .delay((d, i) => (i + 1) * 200)
+                    .ease(d3.easeElastic)
+                    .attr("width", function(d) {
+                        return xScale(d.growth)
+                    })
+                    .style("fill", "#00338D")
+                    .on('end', function() {
+                        d3.select(this)
+                            .on("mouseover", function() {
+                                d3.select(this)
+                                    .transition()
+                                    .duration(600)
+                                    .attr("stroke", "#6D2077")
+                                    .attr("stroke-width", 3)
+                                    .style("fill", "#6D2077")
+                                d3.selectAll(".textCircle")
+                                    .transition()
+                                    .duration(600)
+                                    .attr("r", yScale.bandwidth() / 1.9)
+                                    .attr("stroke", "#6D2077")
+                                    .attr("stroke-width", 1)
+                            })
+                            .on("mouseout", function() {
+                                d3.select(this)
+                                    .transition()
+                                    .duration(600)
+                                    .attr("stroke", "transparent")
+                                    .attr("stroke-width", 0)
+                                    .style("fill", "#00338D")
+                                d3.selectAll(".textCircle")
+                                    .transition().duration(600)
+                                    .attr("r", yScale.bandwidth() / 2)
+                                    .attr("stroke", "transparent")
+                            })
+                    })
+
+
+                var newG4text = svg.append("g").attr("class", "newG4text")
+
+                newG4text.selectAll(".text")
+                    .data(data)
+                    .enter()
+                    .append("text")
+                    .attr("x", d => xScale(d.growth))
+                    .attr("y", d => yScale(d.country) + yScale.bandwidth() / 2)
+                    .attr("dx", "-3em")
+                    .attr("dy", ".4em")
+                    .style("font-size", textSetter())
+                    .style("fill", "#FFF")
+                    .style("font-weight", "bold")
+                    .text(d => d.growth + "%")
+
+                //Add a Title
+                svg.append("text")
+                    .attr("x", (width / 2))
+                    .attr("y", 10)
+                    .attr("dy", 10)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#00338D")
+                    .style("font-size", textSetter())
+                    .text("Growth in technology on the Current Year");
+
+            }
+            //I call the drawing function for the first time.
+            draw("body", ticksDataArray[0]);
+
+            //I call the drawing function for the first time.	
+            function redraw() {
+                draw("body", ticksDataArray[0]);
+            }
+
+            $(window).resize(function() {
+                $("body").empty();
+                redraw();
+            });
+
+        })
+    </script>
+		<!--Tether.min.js-->
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/js/tether.min.js"></script>
+		<!--bootstrap.min.js-->
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	</body>
+
+</html>
